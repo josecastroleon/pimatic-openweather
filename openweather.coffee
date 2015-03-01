@@ -150,9 +150,10 @@ module.exports = (env) ->
     requestForecast: () =>
       weatherLib.forecast {q: @location, lang: @lang, units: @units, cnt: @day}, (result) =>
         if result.list?
-          today = new Date
-          dateStart = new Date(today.getDate() + @day)
-          dateEnd = new Date(today.getDate() + 1)
+          dateStart = new Date
+          dateEnd = new Date
+          dateStart.setDate(dateStart.getDate() + @day)
+          dateEnd.setDate(dateEnd.getDate() + @day)
           dateStart.setHours 0
           dateStart.setMinutes 0
           dateStart.setSeconds 0
