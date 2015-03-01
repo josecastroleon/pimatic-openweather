@@ -1,0 +1,38 @@
+{
+  "name": "pimatic-openweather",
+  "description": "Imports weather data as devices",
+  "author": "Jose Castro Leon <josecastroleon@gmail.com>",
+  "main": "openweather",
+  "files": [
+    "openweather.coffee",
+    "README.md",
+    "openweather-config-schema.coffee",
+    "device-config-schema.coffee"
+  ],
+  "version": "0.8.0",
+  "homepage": "https://github.com/josecastroleon/pimatic-openweather",
+  "configSchema": "openweather-config-schema.coffee",
+  "dependencies": {
+    "openweathermap": "^0.2.0"
+  },
+  "peerDependencies": {
+    "pimatic": "0.8.*"
+  },
+  "engines": {
+    "node": ">0.8.x",
+    "npm": ">1.1.x"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josecastroleon/pimatic-openweather.git"
+  },
+  "keywords": [
+    "pimatic"
+  ],
+  "bugs": {
+    "url": "https://github.com/josecastroleon/pimatic-openweather/issues"
+  }
+}
