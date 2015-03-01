@@ -165,7 +165,7 @@ module.exports = (env) ->
           i = 0
           while i < result.list.length
             d = new Date(result.list[i].dt_txt)
-            if dateEnd <= d and d <= dateStart
+            if dateStart <= d and d <= dateEnd
               if result.list[i].main.temp_min <= temp_min
                 temp_min = result.list[i].main.temp_min
               if result.list[i].main.temp_max >= temp_max
