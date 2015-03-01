@@ -73,18 +73,15 @@ module.exports = (env) ->
       weatherLib.now {q: @location, lang: @lang, units: @units}, (result) =>
         if result.weather?
           @emit "status", result.weather[0].description
-        @emit "temperature", Number result.main.temp.toFixed(1)
-        @emit "humidity", Number result.main.humidity.toFixed(1)
-        @emit "pressure", Number result.main.pressure.toFixed(1)
-        @emit "windspeed", Number result.wind.speed.toFixed(1)
-        rainmm = 0.0
-        if result.rain?
-          rainmm = Number result.rain['3h']
-        @emit "rain", rainmm
-        snowmm = 0.0
-        if result.snow?
-          snowmm = Number result.snow['3h']
-        @emit "snow", snowmm
+        if result.main?
+          @emit "temperature", Number result.main.temp.toFixed(1)
+          @emit "humidity", Number result.main.humidity.toFixed(1)
+          @emit "pressure", Number result.main.pressure.toFixed(1)
+        if result.wind?
+          @emit "windspeed", Number result.wind.speed.toFixed(1)
+        
+        @emit "rain", if result.rain? then Number result.rain['3h'] else 0.0
+        @emit "snow", if result.snow? then Number result.snow['3h'] else 0.0
    
     getStatus: -> Promise.resolve @status
     getTemperature: -> Promise.resolve @temperature
@@ -154,19 +151,16 @@ module.exports = (env) ->
       weatherLib.forecast {q: @location, lang: @lang, units: @units, cnt: @day}, (result) =>
         if result.list[8*@day].weather?
           @emit "forecast", result.list[8*@day].weather[0].description
-        @emit "low", Number result.list[8*@day].main.temp_min.toFixed(1)
-        @emit "high", Number result.list[8*@day].main.temp_max.toFixed(1)
-        @emit "humidity", Number result.list[8*@day].main.humidity.toFixed(1)
-        @emit "pressure", Number result.list[8*@day].main.pressure.toFixed(1)
-        @emit "windspeed", Number result.list[8*@day].wind.speed.toFixed(1)
-        rainmm = 0.0
-        if result.list[8*@day].rain?
-          rainmm = Number result.list[8*@day].rain['3h']
-        @emit "rain", rainmm
-        snowmm = 0.0
-        if result.list[8*@day].snow?
-          snowmm = Number result.list[8*@day].snow['3h']
-        @emit "snow", snowmm
+        if result.list[8*@day].main?
+          @emit "low", Number result.list[8*@day].main.temp_min.toFixed(1)
+          @emit "high", Number result.list[8*@day].main.temp_max.toFixed(1)
+          @emit "humidity", Number result.list[8*@day].main.humidity.toFixed(1)
+          @emit "pressure", Number result.list[8*@day].main.pressure.toFixed(1)
+        if result.list[8*@day].wind?
+          @emit "windspeed", Number result.list[8*@day].wind.speed.toFixed(1)
+     
+        @emit "rain", if result.list[8*@day].rain? then Number result.list[8*@day].rain['3h'] else 0.0
+        @emit "snow", if result.list[8*@day].snow? then Number result.list[8*@day].snow['3h'] else 0.0
 
     getForecast: -> Promise.resolve @forecast
     getLow: -> Promise.resolve @low
