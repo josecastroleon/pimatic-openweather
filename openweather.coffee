@@ -72,7 +72,7 @@ module.exports = (env) ->
     requestForecast: () =>
       weatherLib.now {q: @location, lang: @lang, units: @units}, (result) =>
         if result.weather?
-          @emit "status", result.weather[0].main
+          @emit "status", result.weather[0].description
         @emit "temperature", Number result.main.temp.toFixed(1)
         @emit "humidity", Number result.main.humidity.toFixed(1)
         @emit "pressure", Number result.main.pressure.toFixed(1)
@@ -153,7 +153,7 @@ module.exports = (env) ->
     requestForecast: () =>
       weatherLib.forecast {q: @location, lang: @lang, units: @units, cnt: @day}, (result) =>
         if result.list[8*@day].weather?
-          @emit "forecast", result.list[8*@day].weather[0].main
+          @emit "forecast", result.list[8*@day].weather[0].description
         @emit "low", Number result.list[8*@day].main.temp_min.toFixed(1)
         @emit "high", Number result.list[8*@day].main.temp_max.toFixed(1)
         @emit "humidity", Number result.list[8*@day].main.humidity.toFixed(1)
