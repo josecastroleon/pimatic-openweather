@@ -5,6 +5,8 @@ module.exports = (env) ->
   assert = env.require 'cassert'
   
   weatherLib = require "openweathermap"
+  Promise.promisifyAll(weatherLib)
+  PromiseRetryer = require('promise-retryer')(Promise)
 
   class OpenWeather extends env.plugins.Plugin
     init: (app, @framework, @config) =>
@@ -19,6 +21,19 @@ module.exports = (env) ->
         createCallback: (config) => new OpenWeatherForecastDevice(config)
       })
 
+  handleError = (result) ->
+    code = parseInt(result.cod, 10)
+    if code isnt 200
+      if result.message?.length > 0
+        throw new Error("#{result.message} (#{code})")
+      else
+        if code is 404
+          throw new Error("Location not found")
+        else
+          throw new Error("Error code: #{code}")
+    return
+
+
   class OpenWeatherDevice extends env.devices.Device
     attributes:
       status:
@@ -28,34 +43,40 @@ module.exports = (env) ->
         description: "The messured temperature"
         type: "number"
         unit: '°C'
+        acronym: 'T'
       humidity:
         description: "The actual degree of Humidity"
         type: "number"
         unit: '%'
+        acronym: 'RH'
       pressure:
         description: "The expected pressure"
         type: "number"
         unit: 'mbar'
+        acronym: 'P'
       windspeed:
         description: "The wind speed"
         type: "number"
         unit: 'km/h'
+        acronym: 'WIND'
       rain:
         description: "Rain in mm per 3 hours"
         type: "number"
         unit: "mm"
+        acronym: 'RAIN'
       snow:
         description: "Snow in mm per 3 hours"
         type: "number"
         unit: "mm"
+        acronym: 'SNOW'
 
     status: "None"
-    temperature: 0.0
-    humidity: 0.0
-    pressure: 0.0
-    windspeed: 0.0
-    rain: 0.0
-    snow: 0.0
+    temperature: null
+    humidity: null
+    pressure: null
+    windspeed: null
+    rain: null
+    snow: null
 
     constructor: (@config) ->
       @id = config.id
@@ -65,12 +86,15 @@ module.exports = (env) ->
       @units = config.units
       @timeout = config.timeout
       super()
-
-      setInterval(@requestForecast, @timeout)
       @requestForecast()
 
     requestForecast: () =>
-      weatherLib.now {q: @location, lang: @lang, units: @units}, (result) =>
+      request = PromiseRetryer.run(
+        delay: 1000,
+        maxRetries: 5,
+        promise: => weatherLib.nowAsync( q: @location, lang: @lang, units: @units )
+      ).then( (result) =>
+        handleError(result)
         if result.weather?
           @emit "status", result.weather[0].description
         if result.main?
@@ -79,17 +103,26 @@ module.exports = (env) ->
           @emit "pressure", Number result.main.pressure.toFixed(1)
         if result.wind?
           @emit "windspeed", Number result.wind.speed.toFixed(1)
-        
-        @emit "rain", if result.rain? then Number result.rain['3h'] else 0.0
-        @emit "snow", if result.snow? then Number result.snow['3h'] else 0.0
-   
-    getStatus: -> Promise.resolve @status
-    getTemperature: -> Promise.resolve @temperature
-    getHumidity: -> Promise.resolve @humidity
-    getPressure: -> Promise.resolve @pressure
-    getWindspeed: -> Promise.resolve @windspeed
-    getRain: -> Promise.resolve @rain
-    getSnow: -> Promise.resolve @snow
+        @emit "rain", if result.rain? then Number result.rain[Object.keys(result.rain)[0]] else 0.0
+        @emit "snow", if result.snow? then Number result.snow[Object.keys(result.rain)[0]] else 0.0
+        @_currentRequest = Promise.resolve()
+        setTimeout(@requestForecast, @timeout)
+      ).catch( (err) =>
+        env.logger.error(err.message)
+        env.logger.debug(err.stack)
+        setTimeout(@requestForecast, @timeout)
+      )
+      request.done()
+      @_currentRequest = request unless @_currentRequest?
+      return request
+
+    getStatus: -> @_currentRequest.then(-> @status )
+    getTemperature: -> @_currentRequest.then(-> @temperature )
+    getHumidity: -> @_currentRequest.then(-> @humidity )
+    getPressure: -> @_currentRequest.then(-> @pressure )
+    getWindspeed: -> @_currentRequest.then(-> @windspeed )
+    getRain: -> @_currentRequest.then(-> @rain )
+    getSnow: -> @_currentRequest.then(-> @snow )
 
   class OpenWeatherForecastDevice extends env.devices.Device
     attributes:
@@ -100,39 +133,46 @@ module.exports = (env) ->
         description: "The minimum temperature"
         type: "number"
         unit: '°C'
+        acronym: 'LOW'
       high:
         description: "The maximum temperature"
         type: "number"
         unit: '°C'
+        acronym: 'HIGH'
       humidity:
         description: "The expected humidity"
         type: "number"
         unit: '%'
+        acronym: 'RH'
       pressure:
         description: "The expected pressure"
         type: "number"
         unit: 'mbar'
+        acronym: 'P'
       windspeed:
         description: "The wind speed"
         type: "number"
         unit: 'km/h'
+        acronym: 'WIND'
       rain:
         description: "Rain in mm per 3 hours"
         type: "number"
         unit: "mm"
+        acronym: 'RAIN'
       snow:
         description: "Snow in mm per 3 hours"
         type: "number"
         unit: "mm"
+        acronym: 'SNOW'
 
     forecast: "None"
-    low: 0.0
-    high: 0.0
-    humidity: 0.0
-    pressure: 0.0
-    windspeed: 0.0
-    rain: 0.0
-    snow: 0.0
+    low: null
+    high: null
+    humidity: null
+    pressure: null
+    windspeed: null
+    rain: null
+    snow: null
 
     constructor: (@config) ->
       @id = config.id
@@ -143,12 +183,16 @@ module.exports = (env) ->
       @timeout = config.timeout
       @day = config.day
       super()
-
-      setInterval(@requestForecast, @timeout)
       @requestForecast()
 
     requestForecast: () =>
-      weatherLib.forecast {q: @location, lang: @lang, units: @units, cnt: @day}, (result) =>
+      request = PromiseRetryer.run(
+        delay: 1000,
+        maxRetries: 5,
+        promise: => 
+          weatherLib.forecastAsync( q: @location, lang: @lang, units: @units, cnt: @day )
+      ).then( (result) =>
+        handleError(result)
         if result.list?
           dateStart = new Date
           dateEnd = new Date
@@ -184,17 +228,31 @@ module.exports = (env) ->
               @emit "pressure", Number result.list[8*@day].main.pressure.toFixed(1)
             if result.list[8*@day].wind?
               @emit "windspeed", Number result.list[8*@day].wind.speed.toFixed(1)
-            @emit "rain", if result.list[8*@day].rain? then Number result.list[8*@day].rain['3h'] else 0.0
-            @emit "snow", if result.list[8*@day].snow? then Number result.list[8*@day].snow['3h'] else 0.0
+            @emit "rain", (
+              if result.list[8*@day].rain? then Number result.list[8*@day].rain['3h'] else 0.0
+            )
+            @emit "snow", (
+              if result.list[8*@day].snow? then Number result.list[8*@day].snow['3h'] else 0.0
+            )
+        @_currentRequest = Promise.resolve()
+        setTimeout(@requestForecast, @timeout)
+      ).catch( (err) =>
+        env.logger.error(err.message)
+        env.logger.debug(err.stack)
+        setTimeout(@requestForecast, @timeout)
+      )
+      request.done()
+      @_currentRequest = request unless @_currentRequest?
+      return request
 
-    getForecast: -> Promise.resolve @forecast
-    getLow: -> Promise.resolve @low
-    getHigh: -> Promise.resolve @high
-    getHumidity: -> Promise.resolve @humidity
-    getPressure: -> Promise.resolve @pressure
-    getWindspeed: -> Promise.resolve @windspeed
-    getRain: -> Promise.resolve @rain
-    getSnow: -> Promise.resolve @snow
+    getForecast: -> @_currentRequest.then(-> @forecast )
+    getLow: -> @_currentRequest.then(-> @low )
+    getHigh: -> @_currentRequest.then(-> @high )
+    getHumidity: -> @_currentRequest.then(-> @humidity )
+    getPressure: -> @_currentRequest.then(-> @pressure )
+    getWindspeed: -> @_currentRequest.then(-> @windspeed )
+    getRain: -> @_currentRequest.then(-> @rain )
+    getSnow: -> @_currentRequest.then(-> @snow )
 
   plugin = new OpenWeather
   return plugin
