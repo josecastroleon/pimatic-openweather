@@ -9,7 +9,7 @@
     "openweather-config-schema.coffee",
     "device-config-schema.coffee"
   ],
-  "version": "0.8.4",
+  "version": "0.8.5",
   "homepage": "https://github.com/josecastroleon/pimatic-openweather",
   "configSchema": "openweather-config-schema.coffee",
   "dependencies": {
