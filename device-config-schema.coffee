@@ -3,45 +3,47 @@ module.exports ={
   OpenWeatherDevice: {
     title: "OpenWeatherDevice config options"
     type: "object"
+    extensions: ["xLink", "xAttributeOptions"]
     properties: 
       location:
         description: "City/country"
-        format: String
+        format: "string"
       lang:
         description: "Language"
-        format: String
+        format: "string"
         default: "en"
       units:
         description: "Units"
-        format: String
+        format: "string"
         default: "metric"
       timeout:
         description: "Timeout between requests"
-        format: Number
+        format: "integer"
         default: "60000"
   }
   OpenWeatherForecastDevice: {
     title: "OpenWeatherForecastDevice config options"
     type: "object"
+    extensions: ["xLink", "xAttributeOptions"]
     properties:
       location:
         description: "City/country"
-        format: String
+        format: "string"
       lang:
         description: "Language"
-        format: String
+        format: "string"
         default: "en"
       units:
         description: "Units"
-        format: String
+        format: "string"
         default: "metric"
       timeout:
         description: "Timeout between requests"
-        format: Number
+        format: "integer"
         default: "60000"
       day:
         description: "day to retrieve forecast (today+value)"
-        format: Number
+        format: "integer"
         default: "1"
   }
 }

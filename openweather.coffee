@@ -57,7 +57,7 @@ module.exports = (env) ->
       windspeed:
         description: "The wind speed"
         type: "number"
-        unit: 'km/h'
+        unit: 'm/s'
         acronym: 'WIND'
       rain:
         description: "Rain in mm per 3 hours"
@@ -152,7 +152,7 @@ module.exports = (env) ->
       windspeed:
         description: "The wind speed"
         type: "number"
-        unit: 'km/h'
+        unit: 'm/s'
         acronym: 'WIND'
       rain:
         description: "Rain in mm per 3 hours"
