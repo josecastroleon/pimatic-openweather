@@ -3,7 +3,7 @@ module.exports = (env) ->
   Promise = env.require 'bluebird'
   convict = env.require "convict"
   assert = env.require 'cassert'
-  
+
   weatherLib = require "openweathermap"
   Promise.promisifyAll(weatherLib)
   PromiseRetryer = require('promise-retryer')(Promise)
@@ -13,7 +13,7 @@ module.exports = (env) ->
       deviceConfigDef = require("./device-config-schema")
 
       @framework.deviceManager.registerDeviceClass("OpenWeatherDevice", {
-        configDef: deviceConfigDef.OpenWeatherDevice, 
+        configDef: deviceConfigDef.OpenWeatherDevice,
         createCallback: (config) => new OpenWeatherDevice(config)
       })
       @framework.deviceManager.registerDeviceClass("OpenWeatherForecastDevice", {
@@ -40,7 +40,7 @@ module.exports = (env) ->
         description: "The actual status"
         type: "string"
       temperature:
-        description: "The messured temperature"
+        description: "The measured temperature"
         type: "number"
         unit: '°C'
         acronym: 'T'
@@ -96,15 +96,15 @@ module.exports = (env) ->
       ).then( (result) =>
         handleError(result)
         if result.weather?
-          @emit "status", result.weather[0].description
+          @_setAttribute "status", result.weather[0].description
         if result.main?
-          @emit "temperature", Number result.main.temp.toFixed(1)
-          @emit "humidity", Number result.main.humidity.toFixed(1)
-          @emit "pressure", Number result.main.pressure.toFixed(1)
+          @_setAttribute "temperature", Number result.main.temp.toFixed(1)
+          @_setAttribute "humidity", Number result.main.humidity.toFixed(1)
+          @_setAttribute "pressure", Number result.main.pressure.toFixed(1)
         if result.wind?
-          @emit "windspeed", Number result.wind.speed.toFixed(1)
-        @emit "rain", if result.rain? then Number result.rain[Object.keys(result.rain)[0]] else 0.0
-        @emit "snow", if result.snow? then Number result.snow[Object.keys(result.rain)[0]] else 0.0
+          @_setAttribute "windspeed", Number result.wind.speed.toFixed(1)
+        @_setAttribute "rain", if result.rain? then Number result.rain[Object.keys(result.rain)[0]] else 0.0
+        @_setAttribute "snow", if result.snow? then Number result.snow[Object.keys(result.rain)[0]] else 0.0
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
       ).catch( (err) =>
@@ -116,13 +116,18 @@ module.exports = (env) ->
       @_currentRequest = request unless @_currentRequest?
       return request
 
-    getStatus: -> @_currentRequest.then(-> @status )
-    getTemperature: -> @_currentRequest.then(-> @temperature )
-    getHumidity: -> @_currentRequest.then(-> @humidity )
-    getPressure: -> @_currentRequest.then(-> @pressure )
-    getWindspeed: -> @_currentRequest.then(-> @windspeed )
-    getRain: -> @_currentRequest.then(-> @rain )
-    getSnow: -> @_currentRequest.then(-> @snow )
+    _setAttribute: (attributeName, value) ->
+      unless @[attributeName] is value
+        @[attributeName] = value
+        @emit attributeName, value
+
+    getStatus: -> @_currentRequest.then(=> @status )
+    getTemperature: -> @_currentRequest.then(=> @temperature )
+    getHumidity: -> @_currentRequest.then(=> @humidity )
+    getPressure: -> @_currentRequest.then(=> @pressure )
+    getWindspeed: -> @_currentRequest.then(=> @windspeed )
+    getRain: -> @_currentRequest.then(=> @rain )
+    getSnow: -> @_currentRequest.then(=> @snow )
 
   class OpenWeatherForecastDevice extends env.devices.Device
     attributes:
@@ -189,7 +194,7 @@ module.exports = (env) ->
       request = PromiseRetryer.run(
         delay: 1000,
         maxRetries: 5,
-        promise: => 
+        promise: =>
           weatherLib.forecastAsync( q: @location, lang: @lang, units: @units, cnt: @day )
       ).then( (result) =>
         handleError(result)
@@ -217,21 +222,21 @@ module.exports = (env) ->
                 temp_max = result.list[i].main.temp_max
             i++
 
-          @emit "low", Number temp_min.toFixed(1)
-          @emit "high", Number temp_max.toFixed(1)
+          @_setAttribute "low", Number temp_min.toFixed(1)
+          @_setAttribute "high", Number temp_max.toFixed(1)
 
           if result.list[8*@day]?
             if result.list[8*@day].weather?
-              @emit "forecast", result.list[8*@day].weather[0].description
+              @_setAttribute "forecast", result.list[8*@day].weather[0].description
             if result.list[8*@day].main?
-              @emit "humidity", Number result.list[8*@day].main.humidity.toFixed(1)
-              @emit "pressure", Number result.list[8*@day].main.pressure.toFixed(1)
+              @_setAttribute "humidity", Number result.list[8*@day].main.humidity.toFixed(1)
+              @_setAttribute "pressure", Number result.list[8*@day].main.pressure.toFixed(1)
             if result.list[8*@day].wind?
-              @emit "windspeed", Number result.list[8*@day].wind.speed.toFixed(1)
-            @emit "rain", (
+              @_setAttribute "windspeed", Number result.list[8*@day].wind.speed.toFixed(1)
+            @_setAttribute "rain", (
               if result.list[8*@day].rain? then Number result.list[8*@day].rain['3h'] else 0.0
             )
-            @emit "snow", (
+            @_setAttribute "snow", (
               if result.list[8*@day].snow? then Number result.list[8*@day].snow['3h'] else 0.0
             )
         @_currentRequest = Promise.resolve()
@@ -245,14 +250,19 @@ module.exports = (env) ->
       @_currentRequest = request unless @_currentRequest?
       return request
 
-    getForecast: -> @_currentRequest.then(-> @forecast )
-    getLow: -> @_currentRequest.then(-> @low )
-    getHigh: -> @_currentRequest.then(-> @high )
-    getHumidity: -> @_currentRequest.then(-> @humidity )
-    getPressure: -> @_currentRequest.then(-> @pressure )
-    getWindspeed: -> @_currentRequest.then(-> @windspeed )
-    getRain: -> @_currentRequest.then(-> @rain )
-    getSnow: -> @_currentRequest.then(-> @snow )
+    _setAttribute: (attributeName, value) ->
+      unless @[attributeName] is value
+        @[attributeName] = value
+        @emit attributeName, value
+
+    getForecast: -> @_currentRequest.then(=> @forecast )
+    getLow: -> @_currentRequest.then(=> @low )
+    getHigh: -> @_currentRequest.then(=> @high )
+    getHumidity: -> @_currentRequest.then(=> @humidity )
+    getPressure: -> @_currentRequest.then(=> @pressure )
+    getWindspeed: -> @_currentRequest.then(=> @windspeed )
+    getRain: -> @_currentRequest.then(=> @rain )
+    getSnow: -> @_currentRequest.then(=> @snow )
 
   plugin = new OpenWeather
   return plugin
