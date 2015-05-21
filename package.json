@@ -13,7 +13,7 @@
   "homepage": "https://github.com/josecastroleon/pimatic-openweather",
   "configSchema": "openweather-config-schema.coffee",
   "dependencies": {
-    "openweathermap": "git+https://github.com/sweetpi/node-openweathermap.git#45a030990a7cd716728a834f996814caa3fd519b",
+    "openweathermap": "git+https://github.com/sweetpi/node-openweathermap.git#b6ef98f584c15619861b383396b8bb8c3e01d8c7",
     "promise-retryer": "0.0.1"
   },
   "peerDependencies": {
