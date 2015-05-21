@@ -103,8 +103,12 @@ module.exports = (env) ->
           @_setAttribute "pressure", Number result.main.pressure.toFixed(1)
         if result.wind?
           @_setAttribute "windspeed", Number result.wind.speed.toFixed(1)
-        @_setAttribute "rain", if result.rain? then Number result.rain[Object.keys(result.rain)[0]] else 0.0
-        @_setAttribute "snow", if result.snow? then Number result.snow[Object.keys(result.rain)[0]] else 0.0
+        @_setAttribute "rain", (
+          if result.rain? then Number result.rain[Object.keys(result.rain)[0]] else 0.0
+        )
+        @_setAttribute "snow", (
+          if result.snow? then Number result.snow[Object.keys(result.rain)[0]] else 0.0
+        )
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
       ).catch( (err) =>
