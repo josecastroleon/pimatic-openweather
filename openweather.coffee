@@ -85,8 +85,11 @@ module.exports = (env) ->
       @lang = config.lang
       @units = config.units
       @timeout = config.timeout
-      if (@units isnt "metric")
+      if @units is "imperial"
         @attributes["temperature"].unit = '°F'
+        @attributes["windspeed"].unit = 'mph'
+      else if @units is "standard"
+        @attributes["temperature"].unit = '°K'
       super()
       @requestForecast()
 
@@ -189,9 +192,13 @@ module.exports = (env) ->
       @units = config.units
       @timeout = config.timeout
       @day = config.day
-      if (@units isnt "metric")
+      if @units is "imperial"
         @attributes["low"].unit = '°F'
         @attributes["high"].unit = '°F'
+        @attributes["windspeed"].unit = 'mph'
+      else if @units is "standard"
+        @attributes["low"].unit = 'K'
+        @attributes["high"].unit = 'K'
       super()
       @requestForecast()
 
