@@ -91,7 +91,7 @@ module.exports = (env) ->
         @attributes["temperature"].unit = '°F'
         @attributes["windspeed"].unit = 'mph'
       else if @units is "standard"
-        @attributes["temperature"].unit = '°K'
+        @attributes["temperature"].unit = 'K'
       super()
       @requestForecast()
 
@@ -204,8 +204,8 @@ module.exports = (env) ->
         @attributes["high"].unit = '°F'
         @attributes["windspeed"].unit = 'mph'
       else if @units is "standard"
-        @attributes["low"].unit = '°K'
-        @attributes["high"].unit = '°K'
+        @attributes["low"].unit = 'K'
+        @attributes["high"].unit = 'K'
       super()
       @requestForecast()
 
