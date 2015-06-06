@@ -3,6 +3,7 @@ module.exports = (env) ->
   Promise = env.require 'bluebird'
   convict = env.require "convict"
   assert = env.require 'cassert'
+  _ = env.require 'lodash'
 
   weatherLib = require "openweathermap"
   Promise.promisifyAll(weatherLib)
@@ -85,6 +86,7 @@ module.exports = (env) ->
       @lang = config.lang
       @units = config.units
       @timeout = config.timeout
+      @attributes = _.cloneDeep(@attributes)
       if @units is "imperial"
         @attributes["temperature"].unit = '°F'
         @attributes["windspeed"].unit = 'mph'
@@ -196,13 +198,14 @@ module.exports = (env) ->
       @units = config.units
       @timeout = config.timeout
       @day = config.day
+      @attributes = _.cloneDeep(@attributes)
       if @units is "imperial"
         @attributes["low"].unit = '°F'
         @attributes["high"].unit = '°F'
         @attributes["windspeed"].unit = 'mph'
       else if @units is "standard"
-        @attributes["low"].unit = 'K'
-        @attributes["high"].unit = 'K'
+        @attributes["low"].unit = '°K'
+        @attributes["high"].unit = '°K'
       super()
       @requestForecast()
 
