@@ -2,12 +2,14 @@
   "name": "pimatic-openweather",
   "description": "Imports weather data as devices",
   "author": "Jose Castro Leon <josecastroleon@gmail.com>",
+  "license": "GPL-2.0",
   "main": "openweather",
   "files": [
     "openweather.coffee",
     "README.md",
     "openweather-config-schema.coffee",
-    "device-config-schema.coffee"
+    "device-config-schema.coffee",
+    "LICENSE"
   ],
   "version": "0.8.8",
   "homepage": "https://github.com/josecastroleon/pimatic-openweather",

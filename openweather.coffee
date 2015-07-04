@@ -1,8 +1,6 @@
 module.exports = (env) ->
 
   Promise = env.require 'bluebird'
-  convict = env.require "convict"
-  assert = env.require 'cassert'
 
   weatherLib = require "openweathermap"
   Promise.promisifyAll(weatherLib)
@@ -31,7 +29,6 @@ module.exports = (env) ->
           throw new Error("Location not found")
         else
           throw new Error("Error code: #{code}")
-    return
 
 
   class OpenWeatherDevice extends env.devices.Device
@@ -225,17 +222,20 @@ module.exports = (env) ->
           temp_max = -Infinity
 
           i = 0
+          found = false
           while i < result.list.length
             d = new Date(result.list[i].dt_txt)
             if dateStart <= d and d <= dateEnd
+              found true
               if result.list[i].main.temp_min <= temp_min
                 temp_min = result.list[i].main.temp_min
               if result.list[i].main.temp_max >= temp_max
                 temp_max = result.list[i].main.temp_max
             i++
 
-          @_setAttribute "low", Number temp_min.toFixed(1)
-          @_setAttribute "high", Number temp_max.toFixed(1)
+          if found
+            @_setAttribute "low", Number temp_min.toFixed(1)
+            @_setAttribute "high", Number temp_max.toFixed(1)
 
           if result.list[8*@day]?
             if result.list[8*@day].weather?
@@ -251,6 +251,9 @@ module.exports = (env) ->
             @_setAttribute "snow", (
               if result.list[8*@day].snow? then Number result.list[8*@day].snow['3h'] else 0.0
             )
+          else
+            env.logger.debug "No data found for #{@day}-day forecast"
+
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
       ).catch( (err) =>
