@@ -19,6 +19,10 @@ module.exports = (env) ->
         configDef: deviceConfigDef.OpenWeatherForecastDevice,
         createCallback: (config) => new OpenWeatherForecastDevice(config)
       })
+      @framework.deviceManager.registerDeviceClass("OpenWeatherForecast16Device", {
+        configDef: deviceConfigDef.OpenWeatherForecast16Device,
+        createCallback: (config) => new OpenWeatherForecast16Device(config)
+      })
 
   handleError = (result) ->
     code = parseInt(result.cod, 10)
@@ -260,6 +264,136 @@ module.exports = (env) ->
             )
           else
             env.logger.debug "No data found for #{@day}-day forecast"
+
+        @_currentRequest = Promise.resolve()
+        setTimeout(@requestForecast, @timeout)
+      ).catch( (err) =>
+        env.logger.error(err.message)
+        env.logger.debug(err.stack)
+        setTimeout(@requestForecast, @timeout)
+      )
+      request.done()
+      @_currentRequest = request unless @_currentRequest?
+      return request
+
+    _setAttribute: (attributeName, value) ->
+      unless @[attributeName] is value
+        @[attributeName] = value
+        @emit attributeName, value
+
+    getForecast: -> @_currentRequest.then(=> @forecast )
+    getLow: -> @_currentRequest.then(=> @low )
+    getHigh: -> @_currentRequest.then(=> @high )
+    getHumidity: -> @_currentRequest.then(=> @humidity )
+    getPressure: -> @_currentRequest.then(=> @pressure )
+    getWindspeed: -> @_currentRequest.then(=> @windspeed )
+    getRain: -> @_currentRequest.then(=> @rain )
+    getSnow: -> @_currentRequest.then(=> @snow )
+
+  class OpenWeatherForecast16Device extends env.devices.Device
+    attributes:
+      forecast:
+        description: "The expected forecast"
+        type: "string"
+      low:
+        description: "The minimum temperature"
+        type: "number"
+        unit: '°C'
+        acronym: 'LOW'
+      high:
+        description: "The maximum temperature"
+        type: "number"
+        unit: '°C'
+        acronym: 'HIGH'
+      humidity:
+        description: "The expected humidity"
+        type: "number"
+        unit: '%'
+        acronym: 'RH'
+      pressure:
+        description: "The expected pressure"
+        type: "number"
+        unit: 'mbar'
+        acronym: 'P'
+      windspeed:
+        description: "The wind speed"
+        type: "number"
+        unit: 'm/s'
+        acronym: 'WIND'
+      rain:
+        description: "Rain in mm per 3 hours"
+        type: "number"
+        unit: "mm"
+        acronym: 'RAIN'
+      snow:
+        description: "Snow in mm per 3 hours"
+        type: "number"
+        unit: "mm"
+        acronym: 'SNOW'
+
+    forecast: "None"
+    low: null
+    high: null
+    humidity: null
+    pressure: null
+    windspeed: null
+    rain: null
+    snow: null
+
+    constructor: (@config) ->
+      @id = config.id
+      @name = config.name
+      @location = config.location
+      @lang = config.lang
+      @units = config.units
+      @timeout = config.timeout
+      @day = config.day
+      @arrayday = @day-1
+
+      if @units is "imperial"
+        @attributes["low"].unit = '°F'
+        @attributes["high"].unit = '°F'
+        @attributes["windspeed"].unit = 'mph'
+      else if @units is "standard"
+        @attributes["low"].unit = 'K'
+        @attributes["high"].unit = 'K'
+      super()
+      @requestForecast()
+
+    requestForecast: () =>
+
+      request = PromiseRetryer.run(
+        delay: 1000,
+        maxRetries: 5,
+        promise: =>
+          weatherLib.dailyAsync( q: @location, lang: @lang, units: @units, cnt: @day )
+      ).then( (result) =>
+        handleError(result)
+
+        if result.list[@arrayday]?
+          temp_min = +Infinity
+          temp_max = -Infinity
+          if result.list[@arrayday].temp.min <= temp_min
+            temp_min = result.list[@arrayday].temp.min
+          if result.list[@arrayday].temp.max >= temp_max?
+            temp_max = result.list[@arrayday].temp.max
+
+          @_setAttribute "low", Number temp_min.toFixed(1)
+          @_setAttribute "high", Number temp_max.toFixed(1)
+
+          if result.list[@arrayday].weather?
+            @_setAttribute "forecast", result.list[@arrayday].weather[0].description
+
+          @_setAttribute "humidity", Number result.list[@arrayday].humidity.toFixed(1)
+          @_setAttribute "pressure", Number result.list[@arrayday].pressure.toFixed(1)
+          @_setAttribute "windspeed", Number result.list[@arrayday].speed.toFixed(1)
+
+          @_setAttribute "rain", if result.list[@arrayday].rain? then Number result.list[@arrayday].rain.toFixed(1) else 0.0
+          @_setAttribute "snow", if result.list[@arrayday].snow? then Number result.list[@arrayday].snow.toFixed(1) else 0.0
+
+
+        else
+          env.logger.debug "No data found for #{@day}-day forecast"
 
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
