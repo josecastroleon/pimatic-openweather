@@ -102,16 +102,16 @@ module.exports = (env) ->
         if result.weather?
           @_setAttribute "status", result.weather[0].description
         if result.main?
-          @_setAttribute "temperature", Number result.main.temp.toFixed(1)
-          @_setAttribute "humidity", Number result.main.humidity.toFixed(1)
-          @_setAttribute "pressure", Number result.main.pressure.toFixed(1)
+          @_setAttribute "temperature", @_toFixed(result.main.temp, 1)
+          @_setAttribute "humidity", @_toFixed(result.main.humidity, 1)
+          @_setAttribute "pressure", @_toFixed(result.main.pressure, 1)
         if result.wind?
-          @_setAttribute "windspeed", Number result.wind.speed.toFixed(1)
+          @_setAttribute "windspeed", @_toFixed(result.wind.speed, 1)
         @_setAttribute "rain", (
-          if result.rain? then Number result.rain[Object.keys(result.rain)[0]] else 0.0
+          if result.rain? then @_toFixed(result.rain[Object.keys(result.rain)[0]], 1) else 0.0
         )
         @_setAttribute "snow", (
-          if result.snow? then Number result.snow[Object.keys(result.rain)[0]] else 0.0
+          if result.snow? then @_toFixed(result.snow[Object.keys(result.rain)[0]], 1) else 0.0
         )
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
@@ -123,6 +123,12 @@ module.exports = (env) ->
       request.done()
       @_currentRequest = request unless @_currentRequest?
       return request
+
+    _toFixed: (value, nDecimalDigits) ->
+      if _.isNumber(value)
+        return Number value.toFixed(nDecimalDigits)
+      else
+        return Number value
 
     _setAttribute: (attributeName, value) ->
       unless @[attributeName] is value
@@ -136,6 +142,7 @@ module.exports = (env) ->
     getWindspeed: -> @_currentRequest.then(=> @windspeed )
     getRain: -> @_currentRequest.then(=> @rain )
     getSnow: -> @_currentRequest.then(=> @snow )
+
 
   class OpenWeatherForecastDevice extends env.devices.Device
     attributes:
@@ -195,7 +202,8 @@ module.exports = (env) ->
       @units = config.units
       @timeout = config.timeout
       @day = config.day
-      @attributes = _.cloneDeep(@attributes)
+      @arrayday = @day-1
+
       if @units is "imperial"
         @attributes["low"].unit = '°F'
         @attributes["high"].unit = '°F'
@@ -207,59 +215,39 @@ module.exports = (env) ->
       @requestForecast()
 
     requestForecast: () =>
+
       request = PromiseRetryer.run(
         delay: 1000,
         maxRetries: 5,
         promise: =>
-          weatherLib.forecastAsync( q: @location, lang: @lang, units: @units, cnt: @day )
+          weatherLib.dailyAsync( q: @location, lang: @lang, units: @units, cnt: @day )
       ).then( (result) =>
         handleError(result)
-        if result.list?
-          dateStart = new Date
-          dateEnd = new Date
-          dateStart.setDate(dateStart.getDate() + @day)
-          dateEnd.setDate(dateEnd.getDate() + @day)
-          dateStart.setHours 0
-          dateStart.setMinutes 0
-          dateStart.setSeconds 0
-          dateEnd.setHours 23
-          dateEnd.setMinutes 59
-          dateEnd.setSeconds 59
+
+        if result.list[@arrayday]?
           temp_min = +Infinity
           temp_max = -Infinity
+          if result.list[@arrayday].temp.min <= temp_min
+            temp_min = result.list[@arrayday].temp.min
+          if result.list[@arrayday].temp.max >= temp_max?
+            temp_max = result.list[@arrayday].temp.max
 
-          i = 0
-          found = false
-          while i < result.list.length
-            d = new Date(result.list[i].dt_txt)
-            if dateStart <= d and d <= dateEnd
-              found = true
-              if result.list[i].main.temp_min <= temp_min
-                temp_min = result.list[i].main.temp_min
-              if result.list[i].main.temp_max >= temp_max
-                temp_max = result.list[i].main.temp_max
-            i++
+          @_setAttribute "low", @_toFixed(temp_min, 1)
+          @_setAttribute "high", @_toFixed(temp_max, 1)
 
-          if found
-            @_setAttribute "low", Number temp_min.toFixed(1)
-            @_setAttribute "high", Number temp_max.toFixed(1)
+          if result.list[@arrayday].weather?
+            @_setAttribute "forecast", result.list[@arrayday].weather[0].description
 
-          if result.list[8*@day]?
-            if result.list[8*@day].weather?
-              @_setAttribute "forecast", result.list[8*@day].weather[0].description
-            if result.list[8*@day].main?
-              @_setAttribute "humidity", Number result.list[8*@day].main.humidity.toFixed(1)
-              @_setAttribute "pressure", Number result.list[8*@day].main.pressure.toFixed(1)
-            if result.list[8*@day].wind?
-              @_setAttribute "windspeed", Number result.list[8*@day].wind.speed.toFixed(1)
-            @_setAttribute "rain", (
-              if result.list[8*@day].rain? then Number result.list[8*@day].rain['3h'] else 0.0
-            )
-            @_setAttribute "snow", (
-              if result.list[8*@day].snow? then Number result.list[8*@day].snow['3h'] else 0.0
-            )
-          else
-            env.logger.debug "No data found for #{@day}-day forecast"
+          @_setAttribute "humidity", @_toFixed(result.list[@arrayday].humidity, 1)
+          @_setAttribute "pressure", @_toFixed(result.list[@arrayday].pressure, 1)
+          @_setAttribute "windspeed", @_toFixed(result.list[@arrayday].speed, 1)
+
+          @_setAttribute "rain", if result.list[@arrayday].rain? then @_toFixed(result.list[@arrayday].rain, 1) else 0.0
+          @_setAttribute "snow", if result.list[@arrayday].snow? then @_toFixed(result.list[@arrayday].snow, 1) else 0.0
+
+
+        else
+          env.logger.debug "No data found for #{@day}-day forecast"
 
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
@@ -271,6 +259,12 @@ module.exports = (env) ->
       request.done()
       @_currentRequest = request unless @_currentRequest?
       return request
+
+    _toFixed: (value, nDecimalDigits) ->
+      if _.isNumber(value)
+        return Number value.toFixed(nDecimalDigits)
+      else
+        return Number value
 
     _setAttribute: (attributeName, value) ->
       unless @[attributeName] is value
