@@ -11,7 +11,7 @@
     "device-config-schema.coffee",
     "LICENSE"
   ],
-  "version": "0.8.14",
+  "version": "0.8.15",
   "homepage": "https://github.com/josecastroleon/pimatic-openweather",
   "configSchema": "openweather-config-schema.coffee",
   "dependencies": {
