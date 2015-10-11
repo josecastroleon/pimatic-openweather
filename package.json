@@ -6,16 +6,16 @@
   "main": "openweather",
   "files": [
     "openweather.coffee",
-    "README.md",
     "openweather-config-schema.coffee",
     "device-config-schema.coffee",
+    "README.md",
     "LICENSE"
   ],
   "version": "0.8.15",
   "homepage": "https://github.com/josecastroleon/pimatic-openweather",
   "configSchema": "openweather-config-schema.coffee",
   "dependencies": {
-    "openweathermap": "git+https://github.com/sweetpi/node-openweathermap.git#b6ef98f584c15619861b383396b8bb8c3e01d8c7",
+    "openweathermap": "git+https://github.com/sweetpi/node-openweathermap.git#780348350fb17c88b788b96e52c0f6a83d2c39a8",
     "promise-retryer": "0.0.1"
   },
   "peerDependencies": {
