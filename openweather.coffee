@@ -83,6 +83,12 @@ module.exports = (env) ->
       @lang = config.lang
       @units = config.units
       @timeout = config.timeout
+      @timeoutOnError = config.timeoutOnError
+      @serviceProperties = q: @location, lang: @lang, units: @units
+      if _.isEmpty config.apiKey
+        env.logger.warn "Missing API key. Service request may be blocked"
+      else
+        @serviceProperties.appid = config.apiKey
       @attributes = _.cloneDeep(@attributes)
       if @units is "imperial"
         @attributes["temperature"].unit = '°F'
@@ -96,7 +102,7 @@ module.exports = (env) ->
       request = PromiseRetryer.run(
         delay: 1000,
         maxRetries: 5,
-        promise: => weatherLib.nowAsync( q: @location, lang: @lang, units: @units )
+        promise: => weatherLib.nowAsync(@serviceProperties)
       ).then( (result) =>
         handleError(result)
         if result.weather?
@@ -118,7 +124,7 @@ module.exports = (env) ->
       ).catch( (err) =>
         env.logger.error(err.message)
         env.logger.debug(err.stack)
-        setTimeout(@requestForecast, @timeout)
+        setTimeout(@requestForecast, @timeoutOnError)
       )
       request.done()
       @_currentRequest = request unless @_currentRequest?
@@ -201,8 +207,14 @@ module.exports = (env) ->
       @lang = config.lang
       @units = config.units
       @timeout = config.timeout
+      @timeoutOnError = config.timeoutOnError
       @day = config.day
       @arrayday = @day-1
+      @serviceProperties = q: @location, lang: @lang, units: @units, cnt: @day
+      if _.isEmpty config.apiKey
+        env.logger.warn "Missing API key. Service request may be blocked"
+      else
+        @serviceProperties.appid = config.apiKey
 
       if @units is "imperial"
         @attributes["low"].unit = '°F'
@@ -220,7 +232,7 @@ module.exports = (env) ->
         delay: 1000,
         maxRetries: 5,
         promise: =>
-          weatherLib.dailyAsync( q: @location, lang: @lang, units: @units, cnt: @day )
+          weatherLib.dailyAsync(@serviceProperties)
       ).then( (result) =>
         handleError(result)
 
@@ -254,7 +266,7 @@ module.exports = (env) ->
       ).catch( (err) =>
         env.logger.error(err.message)
         env.logger.debug(err.stack)
-        setTimeout(@requestForecast, @timeout)
+        setTimeout(@requestForecast, @timeoutOnError)
       )
       request.done()
       @_currentRequest = request unless @_currentRequest?
