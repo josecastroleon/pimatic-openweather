@@ -254,8 +254,12 @@ module.exports = (env) ->
           @_setAttribute "pressure", @_toFixed(result.list[@arrayday].pressure, 1)
           @_setAttribute "windspeed", @_toFixed(result.list[@arrayday].speed, 1)
 
-          @_setAttribute "rain", if result.list[@arrayday].rain? then @_toFixed(result.list[@arrayday].rain, 1) else 0.0
-          @_setAttribute "snow", if result.list[@arrayday].snow? then @_toFixed(result.list[@arrayday].snow, 1) else 0.0
+          @_setAttribute "rain", (
+            if result.list[@arrayday].rain? then @_toFixed(result.list[@arrayday].rain, 1) else 0.0
+          )
+          @_setAttribute "snow", (
+            if result.list[@arrayday].snow? then @_toFixed(result.list[@arrayday].snow, 1) else 0.0
+          )
 
 
         else
