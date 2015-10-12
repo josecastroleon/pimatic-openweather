@@ -131,8 +131,10 @@ module.exports = (env) ->
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
       ).catch( (err) =>
-        env.logger.error(err.message)
-        env.logger.debug(err.stack)
+        unless @lastError?.message is err.message
+          env.logger.error(err.message)
+          env.logger.debug(err.stack)
+        @lastError = err
         setTimeout(@requestForecast, @timeoutOnError)
       )
       request.done()
@@ -236,7 +238,7 @@ module.exports = (env) ->
       @requestForecast()
 
     requestForecast: () =>
-
+      lastError = null
       request = PromiseRetryer.run(
         delay: 1000,
         maxRetries: 5,
@@ -277,8 +279,10 @@ module.exports = (env) ->
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
       ).catch( (err) =>
-        env.logger.error(err.message)
-        env.logger.debug(err.stack)
+        unless @lastError?.message is err.message
+          env.logger.error(err.message)
+          env.logger.debug(err.stack)
+        @lastError = err
         setTimeout(@requestForecast, @timeoutOnError)
       )
       request.done()
