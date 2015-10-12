@@ -13,12 +13,21 @@ module.exports = (env) ->
 
       @framework.deviceManager.registerDeviceClass("OpenWeatherDevice", {
         configDef: deviceConfigDef.OpenWeatherDevice,
-        createCallback: (config) => new OpenWeatherDevice(config)
+        createCallback: (config) => new OpenWeatherDevice(config, @config.apiKey)
       })
       @framework.deviceManager.registerDeviceClass("OpenWeatherForecastDevice", {
         configDef: deviceConfigDef.OpenWeatherForecastDevice,
-        createCallback: (config) => new OpenWeatherForecastDevice(config)
+        createCallback: (config) => new OpenWeatherForecastDevice(config, @config.apiKey)
       })
+
+      # some legazy handling:
+      if @framework.config?
+        for device in @framework.config.devices
+          if device.class in ["OpenWeatherDevice", "OpenWeatherForecastDevice"]
+            if device.apiKey?.length > 0
+              @config.apiKey = device.apiKey
+              delete device.apiKey
+
 
   handleError = (result) ->
     code = parseInt(result.cod, 10)
@@ -76,7 +85,7 @@ module.exports = (env) ->
     rain: null
     snow: null
 
-    constructor: (@config) ->
+    constructor: (@config, apiKey) ->
       @id = config.id
       @name = config.name
       @location = config.location
@@ -85,10 +94,10 @@ module.exports = (env) ->
       @timeout = config.timeout
       @timeoutOnError = config.timeoutOnError
       @serviceProperties = q: @location, lang: @lang, units: @units
-      if _.isEmpty config.apiKey
+      unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
       else
-        @serviceProperties.appid = config.apiKey
+        @serviceProperties.appid = apiKey
       @attributes = _.cloneDeep(@attributes)
       if @units is "imperial"
         @attributes["temperature"].unit = '°F'
@@ -200,7 +209,7 @@ module.exports = (env) ->
     rain: null
     snow: null
 
-    constructor: (@config) ->
+    constructor: (@config, apiKey) ->
       @id = config.id
       @name = config.name
       @location = config.location
@@ -211,10 +220,10 @@ module.exports = (env) ->
       @day = config.day
       @arrayday = @day-1
       @serviceProperties = q: @location, lang: @lang, units: @units, cnt: @day
-      if _.isEmpty config.apiKey
+      unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
       else
-        @serviceProperties.appid = config.apiKey
+        @serviceProperties.appid = apiKey
 
       if @units is "imperial"
         @attributes["low"].unit = '°F'

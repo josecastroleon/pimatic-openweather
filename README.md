@@ -14,7 +14,8 @@ Configuration
 Add the plugin to the plugin section:
 
     {
-      "plugin": "openweather"
+      "plugin": "openweather",
+      "apiKey": "xxxxxxxxxxxxx"
     },
 
 Then add the device with the location into the devices section:
@@ -23,7 +24,6 @@ Then add the device with the location into the devices section:
       "id": "weather",
       "class": "OpenWeatherDevice",
       "name": "Weather Geneva",
-      "apiKey": "xxxxxxxxxxxxx",
       "location": "Geneva, CH",
       "units": "metric",
       "lang": "en",
@@ -36,7 +36,6 @@ If you need a forecast you can use the following device:
       "id": "forecast",
       "class": "OpenWeatherForecastDevice",
       "name": "Forecast 1 day for Geneva",
-      "apiKey": "xxxxxxxxxxxxx",
       "location": "Geneva, CH",
       "units": "metric",
       "lang": "en",

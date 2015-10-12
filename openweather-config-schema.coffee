@@ -1,5 +1,9 @@
 module.exports = {
   title: "OpenWeather"
   type: "object"
-  properties: {}
+  properties: {
+    apiKey:
+      description: "API key for openweather service"
+      format: "string"
+  }
 }

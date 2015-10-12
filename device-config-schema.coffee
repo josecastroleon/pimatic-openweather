@@ -5,10 +5,6 @@ module.exports ={
     type: "object"
     extensions: ["xLink", "xAttributeOptions"]
     properties:
-      apiKey:
-        description: "API key for openweather service"
-        format: "string"
-        default: ""
       location:
         description: "City/country"
         format: "string"
