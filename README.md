@@ -11,12 +11,17 @@ Important notes:
 
 Configuration
 -------------
+
+### Plugin Configuration
+
 Add the plugin to the plugin section:
 
     {
       "plugin": "openweather",
       "apiKey": "xxxxxxxxxxxxx"
-    },
+    }
+
+### Device Configuration
 
 Then add the device with the location into the devices section:
 
@@ -44,3 +49,30 @@ If you need a forecast you can use the following device:
     }
 
 Then you can add the items into the mobile frontend.
+
+### Hiding Attributes
+
+Attributes can be hidden from the display in the mobile frontend by using the `xattributeOptions` property as shown in the example below.
+
+	{
+	  "id": "weather",
+	  "class": "OpenWeatherDevice",
+	  "name": "Today",
+	  "location": "Geneva, CH",
+	  "units": "metric",
+	  "timeout": 900000,
+	  "lang": "en"
+	  "xAttributeOptions": [
+		{
+		  "name": "humidity",
+		  "hidden": true
+		},
+		{
+		  "name": "pressure",
+		  "hidden": true
+		}
+	  ]
+	}
+
+
+
