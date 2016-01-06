@@ -126,7 +126,7 @@ module.exports = (env) ->
           if result.rain? then @_toFixed(result.rain[Object.keys(result.rain)[0]], 1) else 0.0
         )
         @_setAttribute "snow", (
-          if result.snow? then @_toFixed(result.snow[Object.keys(result.rain)[0]], 1) else 0.0
+          if result.snow? then @_toFixed(result.snow[Object.keys(result.snow)[0]], 1) else 0.0
         )
         @_currentRequest = Promise.resolve()
         setTimeout(@requestForecast, @timeout)
