@@ -61,7 +61,7 @@ Attributes can be hidden from the display in the mobile frontend by using the `x
 	  "location": "Geneva, CH",
 	  "units": "metric",
 	  "timeout": 900000,
-	  "lang": "en"
+	  "lang": "en",
 	  "xAttributeOptions": [
 		{
 		  "name": "humidity",
