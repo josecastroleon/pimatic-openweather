@@ -20,7 +20,7 @@ module.exports = (env) ->
         createCallback: (config) => new OpenWeatherForecastDevice(config, @config.apiKey)
       })
 
-      # some legazy handling:
+      # some legacy handling:
       if @framework.config?
         for device in @framework.config.devices
           if device.class in ["OpenWeatherDevice", "OpenWeatherForecastDevice"]
@@ -86,13 +86,13 @@ module.exports = (env) ->
     snow: null
 
     constructor: (@config, apiKey) ->
-      @id = config.id
-      @name = config.name
-      @location = config.location
-      @lang = config.lang
-      @units = config.units
-      @timeout = config.timeout
-      @timeoutOnError = config.timeoutOnError
+      @id = @config.id
+      @name = @config.name
+      @location = @config.location
+      @lang = @config.lang
+      @units = @config.units
+      @timeout = @config.timeout
+      @timeoutOnError = @config.timeoutOnError
       @serviceProperties = q: @location, lang: @lang, units: @units
       unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
@@ -212,14 +212,14 @@ module.exports = (env) ->
     snow: null
 
     constructor: (@config, apiKey) ->
-      @id = config.id
-      @name = config.name
-      @location = config.location
-      @lang = config.lang
-      @units = config.units
-      @timeout = config.timeout
-      @timeoutOnError = config.timeoutOnError
-      @day = config.day
+      @id = @config.id
+      @name = @config.name
+      @location = @config.location
+      @lang = @config.lang
+      @units = @config.units
+      @timeout = @config.timeout
+      @timeoutOnError = @config.timeoutOnError
+      @day = @config.day
       @arrayday = @day-1
       @serviceProperties = q: @location, lang: @lang, units: @units, cnt: @day
       unless apiKey?

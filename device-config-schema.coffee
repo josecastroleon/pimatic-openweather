@@ -7,22 +7,22 @@ module.exports ={
     properties:
       location:
         description: "City/country"
-        format: "string"
+        type: "string"
       lang:
         description: "Language"
-        format: "string"
+        type: "string"
         default: "en"
       units:
         description: "Units"
-        format: "string"
+        type: "string"
         default: "metric"
       timeout:
         description: "Timeout between requests"
-        format: "integer"
+        type: "integer"
         default: "900000"
       timeoutOnError:
         description: "Timeout between requests if previous request failed"
-        format: "integer"
+        type: "integer"
         default: "60000"
   }
   OpenWeatherForecastDevice: {
@@ -32,26 +32,26 @@ module.exports ={
     properties:
       location:
         description: "City/country"
-        format: "string"
+        type: "string"
       lang:
         description: "Language"
-        format: "string"
+        type: "string"
         default: "en"
       units:
         description: "Units"
-        format: "string"
+        type: "string"
         default: "metric"
       timeout:
         description: "Timeout between requests"
-        format: "integer"
+        type: "integer"
         default: "900000"
       timeoutOnError:
         description: "Timeout between requests if previous request failed"
-        format: "integer"
+        type: "integer"
         default: "60000"
       day:
         description: "day to retrieve forecast (today+value)"
-        format: "integer"
+        type: "integer"
         default: "1"
   }
 }
