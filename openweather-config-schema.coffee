@@ -4,6 +4,6 @@ module.exports = {
   properties: {
     apiKey:
       description: "API key for openweather service"
-      format: "string"
+      type: "string"
   }
 }
