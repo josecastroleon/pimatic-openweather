@@ -105,10 +105,16 @@ module.exports = (env) ->
       else if @units is "standard"
         @attributes["temperature"].unit = 'K'
       super()
-      @requestForecast()
+      @requestWeatherData()
 
-    requestForecast: () =>
-      request = PromiseRetryer.run(
+    destroy: () ->
+      @requestPromise.cancel() if @requestPromise?
+      clearTimeout @requestWeatherDataTimeout if @requestWeatherDataTimeout?
+      super
+
+    requestWeatherData: () =>
+      @requestWeatherDataTimeout = null
+      @requestPromise = PromiseRetryer.run(
         delay: 1000,
         maxRetries: 5,
         promise: => weatherLib.nowAsync(@serviceProperties)
@@ -129,17 +135,16 @@ module.exports = (env) ->
           if result.snow? then @_toFixed(result.snow[Object.keys(result.snow)[0]], 1) else 0.0
         )
         @_currentRequest = Promise.resolve()
-        setTimeout(@requestForecast, @timeout)
+        @requestWeatherDataTimeout = setTimeout(@requestWeatherData, @timeout)
       ).catch( (err) =>
         unless @lastError?.message is err.message
           env.logger.error(err.message)
           env.logger.debug(err.stack)
         @lastError = err
-        setTimeout(@requestForecast, @timeoutOnError)
+        @requestWeatherDataTimeout = setTimeout(@requestWeatherData, @timeoutOnError)
       )
-      request.done()
-      @_currentRequest = request unless @_currentRequest?
-      return request
+      @_currentRequest = @requestPromise unless @_currentRequest?
+      return @requestPromise
 
     _toFixed: (value, nDecimalDigits) ->
       if _.isNumber(value)
@@ -237,9 +242,14 @@ module.exports = (env) ->
       super()
       @requestForecast()
 
+    destroy: () ->
+      @requestPromise.cancel() if @requestPromise?
+      clearTimeout @requestForecastTimeout if @requestForecastTimeout?
+      super
+
     requestForecast: () =>
-      lastError = null
-      request = PromiseRetryer.run(
+      @requestForecastTimeout = null
+      @requestPromise = PromiseRetryer.run(
         delay: 1000,
         maxRetries: 5,
         promise: =>
@@ -277,17 +287,16 @@ module.exports = (env) ->
           env.logger.debug "No data found for #{@day}-day forecast"
 
         @_currentRequest = Promise.resolve()
-        setTimeout(@requestForecast, @timeout)
+        @requestForecastTimeout = setTimeout(@requestForecast, @timeout)
       ).catch( (err) =>
         unless @lastError?.message is err.message
           env.logger.error(err.message)
           env.logger.debug(err.stack)
         @lastError = err
-        setTimeout(@requestForecast, @timeoutOnError)
+        @requestForecastTimeout = setTimeout(@requestForecast, @timeoutOnError)
       )
-      request.done()
-      @_currentRequest = request unless @_currentRequest?
-      return request
+      @_currentRequest = @requestPromise unless @_currentRequest?
+      return @requestPromise
 
     _toFixed: (value, nDecimalDigits) ->
       if _.isNumber(value)
