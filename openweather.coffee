@@ -121,7 +121,7 @@ module.exports = (env) ->
       ).then( (result) =>
         handleError(result)
         if result.weather?
-          @_setAttribute "status", result.weather[0].description
+          @_setAttribute "status", result.weather[0].description, true
         if result.main?
           @_setAttribute "temperature", @_toFixed(result.main.temp, 1)
           @_setAttribute "humidity", @_toFixed(result.main.humidity, 1)
@@ -152,8 +152,8 @@ module.exports = (env) ->
       else
         return Number value
 
-    _setAttribute: (attributeName, value) ->
-      unless @[attributeName] is value
+    _setAttribute: (attributeName, value, discrete = false) ->
+      if not discrete or @[attributeName] isnt value
         @[attributeName] = value
         @emit attributeName, value
 
@@ -269,7 +269,7 @@ module.exports = (env) ->
           @_setAttribute "high", @_toFixed(temp_max, 1)
 
           if result.list[@arrayday].weather?
-            @_setAttribute "forecast", result.list[@arrayday].weather[0].description
+            @_setAttribute "forecast", result.list[@arrayday].weather[0].description, true
 
           @_setAttribute "humidity", @_toFixed(result.list[@arrayday].humidity, 1)
           @_setAttribute "pressure", @_toFixed(result.list[@arrayday].pressure, 1)
