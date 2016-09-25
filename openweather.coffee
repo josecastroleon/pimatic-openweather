@@ -13,7 +13,7 @@ module.exports = (env) ->
 
       @framework.deviceManager.registerDeviceClass("OpenWeatherDevice", {
         configDef: deviceConfigDef.OpenWeatherDevice,
-        createCallback: (config) => new OpenWeatherDevice(config, @config.apiKey)
+        createCallback: (config, lastState) => new OpenWeatherDevice(config, lastState, @config.apiKey)
       })
       @framework.deviceManager.registerDeviceClass("OpenWeatherForecastDevice", {
         configDef: deviceConfigDef.OpenWeatherForecastDevice,
@@ -85,24 +85,32 @@ module.exports = (env) ->
     rain: null
     snow: null
 
-    constructor: (@config, apiKey) ->
+    constructor: (@config, lastState, apiKey) ->
       @id = @config.id
       @name = @config.name
-      @location = @config.location
-      @lang = @config.lang
-      @units = @config.units
       @timeout = @config.timeout
       @timeoutOnError = @config.timeoutOnError
-      @serviceProperties = q: @location, lang: @lang, units: @units
+      @serviceProperties = lang: @config.lang, units: @config.units, agent: false
+      if @config.cityId?
+        @serviceProperties.id = @config.cityId
+      else
+        @serviceProperties.q = @config.location
+      
       unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
       else
         @serviceProperties.appid = apiKey
+
+      # set attribute value with last state from DB
+      if lastState?
+        for own key of @attributes
+          @[key] = lastState[key].value if lastState[key]?
+
       @attributes = _.cloneDeep(@attributes)
-      if @units is "imperial"
+      if @config.units is "imperial"
         @attributes["temperature"].unit = '°F'
         @attributes["windspeed"].unit = 'mph'
-      else if @units is "standard"
+      else if @config.units is "standard"
         @attributes["temperature"].unit = 'K'
       super()
       @requestWeatherData()
@@ -112,6 +120,27 @@ module.exports = (env) ->
       clearTimeout @requestWeatherDataTimeout if @requestWeatherDataTimeout?
       super
 
+    checkIfBlacklisted: (result) ->
+      match =
+        base: result.base
+        id: result.weather?[0].id
+        temperature: @_toFixed(result.main.temp, 1)
+
+      env.logger.debug "Weather data received: #{JSON.stringify match}"
+      isBlacklisted = false
+      if @config.blacklist.length isnt 0
+        isBlacklisted = @config.blacklist.some (entry) ->
+          Object.keys(entry).every (key) ->
+            entry[key] is match[key]
+
+      if not isBlacklisted and @lastMatch? and Math.abs(@lastMatch.temperature - match.temperature) > 3.5
+        env.logger.info
+        "Potential outlier detected, previous: #{JSON.stringify @lastMatch}, current: #{JSON.stringify match}"
+
+      @lastMatch = match
+      return isBlacklisted
+
+
     requestWeatherData: () =>
       @requestWeatherDataTimeout = null
       @requestPromise = PromiseRetryer.run(
@@ -120,20 +149,23 @@ module.exports = (env) ->
         promise: => weatherLib.nowAsync(@serviceProperties)
       ).then( (result) =>
         handleError(result)
-        if result.weather?
-          @_setAttribute "status", result.weather[0].description, true
-        if result.main?
-          @_setAttribute "temperature", @_toFixed(result.main.temp, 1)
-          @_setAttribute "humidity", @_toFixed(result.main.humidity, 1)
-          @_setAttribute "pressure", @_toFixed(result.main.pressure, 1)
-        if result.wind?
-          @_setAttribute "windspeed", @_toFixed(result.wind.speed, 1)
-        @_setAttribute "rain", (
-          if result.rain? then @_toFixed(result.rain[Object.keys(result.rain)[0]], 1) else 0.0
-        )
-        @_setAttribute "snow", (
-          if result.snow? then @_toFixed(result.snow[Object.keys(result.snow)[0]], 1) else 0.0
-        )
+        if @checkIfBlacklisted result
+          env.logger.debug "Result is blacklisted. Skipping ..."
+        else
+          if result.weather?
+            @_setAttribute "status", result.weather[0].description, true
+          if result.main?
+            @_setAttribute "temperature", @_toFixed(result.main.temp, 1)
+            @_setAttribute "humidity", @_toFixed(result.main.humidity, 1)
+            @_setAttribute "pressure", @_toFixed(result.main.pressure, 1)
+          if result.wind?
+            @_setAttribute "windspeed", @_toFixed(result.wind.speed, 1)
+          @_setAttribute "rain", (
+            if result.rain? then @_toFixed(result.rain[Object.keys(result.rain)[0]], 1) else 0.0
+          )
+          @_setAttribute "snow", (
+            if result.snow? then @_toFixed(result.snow[Object.keys(result.snow)[0]], 1) else 0.0
+          )
         @_currentRequest = Promise.resolve()
         @requestWeatherDataTimeout = setTimeout(@requestWeatherData, @timeout)
       ).catch( (err) =>
@@ -219,24 +251,27 @@ module.exports = (env) ->
     constructor: (@config, apiKey) ->
       @id = @config.id
       @name = @config.name
-      @location = @config.location
-      @lang = @config.lang
-      @units = @config.units
       @timeout = @config.timeout
       @timeoutOnError = @config.timeoutOnError
       @day = @config.day
-      @arrayday = @day-1
-      @serviceProperties = q: @location, lang: @lang, units: @units, cnt: @day
+      @arrayday = @day - 1
+      @serviceProperties = lang: @config.lang, units: @config.units, cnt: @day, agent: false
+
+      if @config.cityId?
+        @serviceProperties.id = @config.cityId
+      else
+        @serviceProperties.q = @config.location
+        
       unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
       else
         @serviceProperties.appid = apiKey
 
-      if @units is "imperial"
+      if @config.units is "imperial"
         @attributes["low"].unit = '°F'
         @attributes["high"].unit = '°F'
         @attributes["windspeed"].unit = 'mph'
-      else if @units is "standard"
+      else if @config.units is "standard"
         @attributes["low"].unit = 'K'
         @attributes["high"].unit = 'K'
       super()
@@ -256,6 +291,7 @@ module.exports = (env) ->
           weatherLib.dailyAsync(@serviceProperties)
       ).then( (result) =>
         handleError(result)
+        env.logger.debug "Forecast result contains data for #{result.cnt} day(s)"
 
         if result.list[@arrayday]?
           temp_min = +Infinity
