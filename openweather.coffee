@@ -176,7 +176,7 @@ module.exports = (env) ->
             then @_toFixed(result.snow[Object.keys(result.snow)[0]], 1)
             else 0.0
           )
-          if result.wind?
+          if result.clouds?
             @_setAttribute "clouds", @_toFixed(result.clouds.all, 0)
         @_currentRequest = Promise.resolve()
         @requestWeatherDataTimeout = setTimeout(@requestWeatherData, @timeout)
@@ -336,9 +336,9 @@ module.exports = (env) ->
           @_setAttribute "snow", (
             if result.list[@arrayday].snow? then @_toFixed(result.list[@arrayday].snow, 1) else 0.0
           )
-
-          if result.list[@arrayday].clouds?
-            @_setAttribute "clouds", @_toFixed(result.list[@arrayday].clouds, 0)
+          @_setAttribute "clouds", (
+            if result.list[@arrayday].clouds? then @_toFixed(result.list[@arrayday].clouds, 0) else 0
+          )
         else
           env.logger.debug "No data found for #{@day}-day forecast"
 
