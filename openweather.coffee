@@ -76,6 +76,11 @@ module.exports = (env) ->
         type: "number"
         unit: "mm"
         acronym: 'SNOW'
+      clouds:
+        description: "Cloudyness"
+        type: "number"
+        unit: '%'
+        acronym: 'CLOUDS'
 
     status: "None"
     temperature: null
@@ -84,6 +89,7 @@ module.exports = (env) ->
     windspeed: null
     rain: null
     snow: null
+    clouds: null
 
     constructor: (@config, lastState, apiKey) ->
       @id = @config.id
@@ -170,6 +176,8 @@ module.exports = (env) ->
             then @_toFixed(result.snow[Object.keys(result.snow)[0]], 1)
             else 0.0
           )
+          if result.wind?
+            @_setAttribute "clouds", @_toFixed(result.clouds.all, 0)
         @_currentRequest = Promise.resolve()
         @requestWeatherDataTimeout = setTimeout(@requestWeatherData, @timeout)
       ).catch( (err) =>
@@ -200,6 +208,7 @@ module.exports = (env) ->
     getWindspeed: -> @_currentRequest.then(=> @windspeed )
     getRain: -> @_currentRequest.then(=> @rain )
     getSnow: -> @_currentRequest.then(=> @snow )
+    getClouds: -> @_currentRequest.then(=> @clouds )
 
 
   class OpenWeatherForecastDevice extends env.devices.Device
@@ -242,6 +251,11 @@ module.exports = (env) ->
         type: "number"
         unit: "mm"
         acronym: 'SNOW'
+      clouds:
+        description: "Clouds in percentage"
+        type: "number"
+        unit: "%"
+        acronym: "CLOUDS"
 
     forecast: "None"
     low: null
@@ -251,6 +265,7 @@ module.exports = (env) ->
     windspeed: null
     rain: null
     snow: null
+    clouds: null
 
     constructor: (@config, apiKey) ->
       @id = @config.id
@@ -321,6 +336,9 @@ module.exports = (env) ->
           @_setAttribute "snow", (
             if result.list[@arrayday].snow? then @_toFixed(result.list[@arrayday].snow, 1) else 0.0
           )
+
+          if result.list[@arrayday].clouds?
+            @_setAttribute "clouds", @_toFixed(result.list[@arrayday].clouds, 0)
         else
           env.logger.debug "No data found for #{@day}-day forecast"
 
@@ -355,6 +373,7 @@ module.exports = (env) ->
     getWindspeed: -> @_currentRequest.then(=> @windspeed )
     getRain: -> @_currentRequest.then(=> @rain )
     getSnow: -> @_currentRequest.then(=> @snow )
+    getClouds: -> @_currentRequest.then(=> @clouds )
 
   plugin = new OpenWeather
   return plugin
