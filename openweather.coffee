@@ -317,7 +317,7 @@ module.exports = (env) ->
           temp_max = -Infinity
           if result.list[@arrayday].temp.min <= temp_min
             temp_min = result.list[@arrayday].temp.min
-          if result.list[@arrayday].temp.max >= temp_max?
+          if result.list[@arrayday].temp.max >= temp_max
             temp_max = result.list[@arrayday].temp.max
 
           @_setAttribute "low", @_toFixed(temp_min, 1)
