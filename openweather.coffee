@@ -170,7 +170,7 @@ module.exports = (env) ->
           if result.weather?
             @_setAttribute "status", result.weather[0].description, true
             @_setAttribute "status-category", result.weather[0].main, true
-            @_setAttribute "status-id", @_NUMBER.weather[0].id)
+            @_setAttribute "status-id", parseInt(result.weather[0].id)
           if result.main?
             @_setAttribute "temperature", @_toFixed(result.main.temp, 1)
             @_setAttribute "humidity", @_toFixed(result.main.humidity, 1)
