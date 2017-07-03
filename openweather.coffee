@@ -46,6 +46,13 @@ module.exports = (env) ->
       status:
         description: "The actual status"
         type: "string"
+      status-cagetory:
+        description: "Category of the actual status"
+        type: "string"
+      status-id:
+        description: "ID of the actual status"
+        type: "number"
+        acronym: "#"
       temperature:
         description: "The measured temperature"
         type: "number"
@@ -83,6 +90,8 @@ module.exports = (env) ->
         acronym: 'CLOUDS'
 
     status: "None"
+    status-category: "None"
+    status-id: null
     temperature: null
     humidity: null
     pressure: null
@@ -160,6 +169,8 @@ module.exports = (env) ->
         else
           if result.weather?
             @_setAttribute "status", result.weather[0].description, true
+            @_setAttribute "status-category", result.weather[0].main, true
+            @_setAttribute "status-id", @_NUMBER.weather[0].id)
           if result.main?
             @_setAttribute "temperature", @_toFixed(result.main.temp, 1)
             @_setAttribute "humidity", @_toFixed(result.main.humidity, 1)
@@ -202,6 +213,8 @@ module.exports = (env) ->
         @emit attributeName, value
 
     getStatus: -> @_currentRequest.then(=> @status )
+    getStatusCategory: -> @_currentRequest.then(=> @status-category )
+    getStatusId: -> @_currentRequest.then(=> @status-id )
     getTemperature: -> @_currentRequest.then(=> @temperature )
     getHumidity: -> @_currentRequest.then(=> @humidity )
     getPressure: -> @_currentRequest.then(=> @pressure )
