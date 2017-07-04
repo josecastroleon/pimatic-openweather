@@ -46,13 +46,12 @@ module.exports = (env) ->
       status:
         description: "The actual status"
         type: "string"
-      status-cagetory:
+      statuscagetory:
         description: "Category of the actual status"
         type: "string"
-      status-id:
+      statusid:
         description: "ID of the actual status"
         type: "number"
-        acronym: "#"
       temperature:
         description: "The measured temperature"
         type: "number"
@@ -90,8 +89,8 @@ module.exports = (env) ->
         acronym: 'CLOUDS'
 
     status: "None"
-    status-category: "None"
-    status-id: null
+    statuscagetory: "None"
+    statusid: null
     temperature: null
     humidity: null
     pressure: null
@@ -110,7 +109,7 @@ module.exports = (env) ->
         @serviceProperties.id = @config.cityId
       else
         @serviceProperties.q = @config.location
-      
+
       unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
       else
@@ -169,8 +168,8 @@ module.exports = (env) ->
         else
           if result.weather?
             @_setAttribute "status", result.weather[0].description, true
-            @_setAttribute "status-category", result.weather[0].main, true
-            @_setAttribute "status-id", parseInt(result.weather[0].id)
+            @_setAttribute "statuscagetory", result.weather[0].main, true
+            @_setAttribute "statusid", parseInt(result.weather[0].id), true
           if result.main?
             @_setAttribute "temperature", @_toFixed(result.main.temp, 1)
             @_setAttribute "humidity", @_toFixed(result.main.humidity, 1)
@@ -213,8 +212,8 @@ module.exports = (env) ->
         @emit attributeName, value
 
     getStatus: -> @_currentRequest.then(=> @status )
-    getStatusCategory: -> @_currentRequest.then(=> @status-category )
-    getStatusId: -> @_currentRequest.then(=> @status-id )
+    getStatuscagetory: -> @_currentRequest.then(=> @statuscagetory )
+    getStatusid: -> @_currentRequest.then(=> @statusid )
     getTemperature: -> @_currentRequest.then(=> @temperature )
     getHumidity: -> @_currentRequest.then(=> @humidity )
     getPressure: -> @_currentRequest.then(=> @pressure )
@@ -293,7 +292,7 @@ module.exports = (env) ->
         @serviceProperties.id = @config.cityId
       else
         @serviceProperties.q = @config.location
-        
+
       unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
       else
