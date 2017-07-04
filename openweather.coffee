@@ -46,6 +46,12 @@ module.exports = (env) ->
       status:
         description: "The actual status"
         type: "string"
+      statuscagetory:
+        description: "Category of the actual status"
+        type: "string"
+      statusid:
+        description: "ID of the actual status"
+        type: "number"
       temperature:
         description: "The measured temperature"
         type: "number"
@@ -83,6 +89,8 @@ module.exports = (env) ->
         acronym: 'CLOUDS'
 
     status: "None"
+    statuscagetory: "None"
+    statusid: null
     temperature: null
     humidity: null
     pressure: null
@@ -101,7 +109,7 @@ module.exports = (env) ->
         @serviceProperties.id = @config.cityId
       else
         @serviceProperties.q = @config.location
-      
+
       unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
       else
@@ -160,6 +168,8 @@ module.exports = (env) ->
         else
           if result.weather?
             @_setAttribute "status", result.weather[0].description, true
+            @_setAttribute "statuscagetory", result.weather[0].main, true
+            @_setAttribute "statusid", parseInt(result.weather[0].id), true
           if result.main?
             @_setAttribute "temperature", @_toFixed(result.main.temp, 1)
             @_setAttribute "humidity", @_toFixed(result.main.humidity, 1)
@@ -202,6 +212,8 @@ module.exports = (env) ->
         @emit attributeName, value
 
     getStatus: -> @_currentRequest.then(=> @status )
+    getStatuscagetory: -> @_currentRequest.then(=> @statuscagetory )
+    getStatusid: -> @_currentRequest.then(=> @statusid )
     getTemperature: -> @_currentRequest.then(=> @temperature )
     getHumidity: -> @_currentRequest.then(=> @humidity )
     getPressure: -> @_currentRequest.then(=> @pressure )
@@ -280,7 +292,7 @@ module.exports = (env) ->
         @serviceProperties.id = @config.cityId
       else
         @serviceProperties.q = @config.location
-        
+
       unless apiKey?
         env.logger.warn "Missing API key. Service request may be blocked"
       else
