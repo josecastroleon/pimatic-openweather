@@ -99,4 +99,13 @@ consist of up to three of the following properties.
   match will be ANDed with the remainder of the filter
 
 
+### Additional Attributes
+
+Most Attributes like temperature, wind or rain are self-explanatory. In addition to the status there are two more attributes provided by the openweatermap-api:
+
+* statuscategory: some kind of main-category for the status. Example: when the status is 'light rain' the category is 'Rain'
+* statusid: a numeric code representing the status. Example: the id for 'clear sky' is 800.
+The statusid can be used to display a representing icon from the font 'Weather Icons' (https://erikflowers.github.io/weather-icons/). In this XML the statusids are already mapped to an icon: https://github.com/erikflowers/weather-icons/blob/master/values/weathericons.xml (look for wi_owm_<statusid>)
+
+All provided categories, status and ids are listed here: https://openweathermap.org/weather-conditions
 
