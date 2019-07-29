@@ -330,10 +330,10 @@ module.exports = (env) ->
         if result.list[@arrayday]?
           temp_min = +Infinity
           temp_max = -Infinity
-          if result.list[@arrayday].temp.min <= temp_min
-            temp_min = result.list[@arrayday].temp.min
-          if result.list[@arrayday].temp.max >= temp_max
-            temp_max = result.list[@arrayday].temp.max
+          if result.list[@arrayday].main.temp_min <= temp_min
+            temp_min = result.list[@arrayday].main.temp_min
+          if result.list[@arrayday].main.temp_max >= temp_max
+            temp_max = result.list[@arrayday].main.temp_max
 
           @_setAttribute "low", @_toFixed(temp_min, 1)
           @_setAttribute "high", @_toFixed(temp_max, 1)
@@ -341,9 +341,9 @@ module.exports = (env) ->
           if result.list[@arrayday].weather?
             @_setAttribute "forecast", result.list[@arrayday].weather[0].description, true
 
-          @_setAttribute "humidity", @_toFixed(result.list[@arrayday].humidity, 1)
-          @_setAttribute "pressure", @_toFixed(result.list[@arrayday].pressure, 1)
-          @_setAttribute "windspeed", @_toFixed(result.list[@arrayday].speed, 1)
+          @_setAttribute "humidity", @_toFixed(result.list[@arrayday].main.humidity, 1)
+          @_setAttribute "pressure", @_toFixed(result.list[@arrayday].main.pressure, 1)
+          @_setAttribute "windspeed", @_toFixed(result.list[@arrayday].wind.speed, 1)
 
           @_setAttribute "rain", (
             if result.list[@arrayday].rain? then @_toFixed(result.list[@arrayday].rain, 1) else 0.0
