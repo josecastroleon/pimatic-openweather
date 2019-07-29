@@ -44,15 +44,15 @@ module.exports = (env) ->
   class OpenWeatherDevice extends env.devices.Device
     attributes:
       status:
-        description: "The actual status"
+        description: "The current status"
         type: "string"
         acronym: 'STATUS'
       statuscategory:
-        description: "Category of the actual status"
+        description: "Category of the current status"
         type: "string"
         acronym: 'CATEGORY'
       statusid:
-        description: "ID of the actual status"
+        description: "ID of the current status"
         type: "number"
         acronym: 'SID'
       temperature:
