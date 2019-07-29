@@ -46,12 +46,15 @@ module.exports = (env) ->
       status:
         description: "The actual status"
         type: "string"
+        acronym: 'STATUS'
       statuscategory:
         description: "Category of the actual status"
         type: "string"
+        acronym: 'CATEGORY'
       statusid:
         description: "ID of the actual status"
         type: "number"
+        acronym: 'SID'
       temperature:
         description: "The measured temperature"
         type: "number"
